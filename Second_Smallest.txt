@@ -1,0 +1,44 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<limits.h>
+
+int SecSmalllest(int arr[], int n) {
+    if (n < 2) {
+        printf("Array must have at least two elements.\n");
+        return -1;
+    }
+
+    int Smallest = arr[0];
+    for (int i = 0; i < n; i++) {
+        if (arr[i] < Smallest) {
+            Smallest = arr[i];
+        }
+    }
+
+    int SecSmall = INT_MAX;
+    for (int i = 0; i < n; i++) {
+        if (arr[i] != Smallest && arr[i] < SecSmall) {
+            SecSmall = arr[i];
+        }
+    }
+
+    if (SecSmall == INT_MAX) {
+        printf("There is no second smallest element (all elements might be the same).\n");
+        return -1;
+    }
+
+    return SecSmall;
+}
+
+int main() {
+    int arr[] = {70, 50, 40, 30, 20, 10};
+    int len = sizeof(arr) / sizeof(arr[0]);
+
+    int result = SecSmalllest(arr, len);
+
+    if (result != -1) {
+        printf("The second smallest element in the list is: %d\n", result);
+    }
+
+    return 0;
+}
