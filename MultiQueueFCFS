@@ -1,0 +1,90 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX 10
+
+typedef struct {
+    int pid;
+    int at;
+    int bt;
+    int type;
+    int wt;
+    int tat;
+    int finish_time;
+} Process;
+
+void sortByAT(Process queue[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (queue[j].at > queue[j + 1].at) {
+                Process temp = queue[j];
+                queue[j] = queue[j + 1];
+                queue[j + 1] = temp;
+            }
+        }
+    }
+}
+
+void calculateTimes(Process queue[], int n) {
+    int time = 0;
+    for (int i = 0; i < n; i++) {
+        if (time < queue[i].at) {
+            time = queue[i].at;
+        }
+        queue[i].finish_time = time + queue[i].bt;
+        queue[i].tat = queue[i].finish_time - queue[i].at;
+        queue[i].wt = queue[i].tat - queue[i].bt;
+        time = queue[i].finish_time;
+    }
+}
+
+void ExecuteQ(Process queue[], int n, char *qname) {
+    printf("Process %s queue:\n", qname);
+    int total_wt = 0, total_tat = 0;
+
+    for (int i = 0; i < n; i++) {
+        printf("Process %d starts at %d, finishes at %d, Turnaround Time: %d, Waiting Time: %d\n",
+            queue[i].pid,
+            queue[i].at,
+            queue[i].finish_time,
+            queue[i].tat,
+            queue[i].wt);
+
+        total_wt += queue[i].wt;
+        total_tat += queue[i].tat;
+    }
+
+    printf("Average Waiting Time: %.2f\n", (float)total_wt / n);
+    printf("Average Turnaround Time: %.2f\n", (float)total_tat / n);
+}
+
+int main() {
+    int n, SysCount = 0, UserCount = 0;
+    Process SysQueue[MAX], UserQueue[MAX];
+
+    printf("Enter the number of processes:\n");
+    scanf("%d", &n);
+
+    for (int i = 0; i < n; i++) {
+        Process p;
+        printf("Enter pid, arrival time, burst time & type (0 for System, 1 for User):\n");
+        scanf("%d %d %d %d", &p.pid, &p.at, &p.bt, &p.type);
+
+        if (p.type == 0) {
+            SysQueue[SysCount++] = p;
+        } else {
+            UserQueue[UserCount++] = p;
+        }
+    }
+
+    sortByAT(SysQueue, SysCount);
+    sortByAT(UserQueue, UserCount);
+
+    calculateTimes(SysQueue, SysCount);
+    calculateTimes(UserQueue, UserCount);
+
+    ExecuteQ(SysQueue, SysCount, "System");
+    ExecuteQ(UserQueue, UserCount, "User");
+
+    return 0;
+}
