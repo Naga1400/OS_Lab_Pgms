@@ -1,83 +1,58 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
 
-#define MAX_TASKS 10
+#define MAX 10
 
 typedef struct {
-    int id;
-    int period;
-    int execution_time;
-    int remaining_time;
+    int id, exec, period, rem, deadline;
 } Task;
 
-Task tasks[MAX_TASKS];
-int num_tasks;
+int gcd(int a, int b) { return b == 0 ? a : gcd(b, a % b); }
+int lcm(int a, int b) { return (a * b) / gcd(a, b); }
 
-void sort_tasks_by_period() {
-    for (int i = 0; i < num_tasks - 1; i++) {
-        for (int j = i + 1; j < num_tasks; j++) {
-            if (tasks[i].period > tasks[j].period) {
-                Task temp = tasks[i];
-                tasks[i] = tasks[j];
-                tasks[j] = temp;
-            }
-        }
-    }
+int hyper_period(Task t[], int n) {
+    int hp = t[0].period;
+    for (int i = 1; i < n; i++) hp = lcm(hp, t[i].period);
+    return hp;
 }
 
-int check_feasibility() {
-    double sum_utilization = 0;
-    for (int i = 0; i < num_tasks; i++) {
-        sum_utilization += (double)tasks[i].execution_time / tasks[i].period;
-    }
-    return sum_utilization <= (double)num_tasks * (pow(2, 1.0 / num_tasks) - 1);
+int get_highest(Task t[], int n) {
+    int high = -1;
+    for (int i = 0; i < n; i++)
+        if (t[i].rem > 0 && (high == -1 || t[i].period < t[high].period))
+            high = i;
+    return high;
 }
 
-void run_scheduler() {
-    int max_period = 0;
-    for (int i = 0; i < num_tasks; i++) {
-        if (tasks[i].period > max_period) {
-            max_period = tasks[i].period;
-        }
-    }
-    for (int i = 0; i < num_tasks; i++) {
-        tasks[i].remaining_time = tasks[i].execution_time;
-    }
-    for (int time = 0; time < max_period; time++) {
-        printf("Time: %d\n", time);
-        for (int i = 0; i < num_tasks; i++) {
-            if (time % tasks[i].period == 0) {
-                tasks[i].remaining_time = tasks[i].execution_time;
-            }
-        }
-        for (int i = 0; i < num_tasks; i++) {
-            if (tasks[i].remaining_time > 0) {
-                printf("Task %d is executing.\n", tasks[i].id);
-                tasks[i].remaining_time--;
-                break;
-            }
-        }
-        for (int i = 0; i < num_tasks; i++) {
-            printf("Task %d - Remaining Time: %d\n", tasks[i].id, tasks[i].remaining_time);
-        }
+void rms(Task t[], int n, int hp) {
+    printf("\nTime\tTask\n");
+    for (int i = 0; i < n; i++) t[i].rem = t[i].exec;
+    
+    for (int time = 0; time < hp; time++) {
+        for (int i = 0; i < n; i++)
+            if (time % t[i].period == 0) t[i].rem = t[i].exec;
+        
+        int id = get_highest(t, n);
+        if (id != -1) {
+            printf("%d\tT%d\n", time, t[id].id);
+            t[id].rem--;
+        } else printf("%d\tIDLE\n", time);
     }
 }
 
 int main() {
-    printf("Enter the number of tasks: ");
-    scanf("%d", &num_tasks);
-    for (int i = 0; i < num_tasks; i++) {
-        printf("Enter the period and execution time for task %d: ", i + 1);
-        scanf("%d %d", &tasks[i].period, &tasks[i].execution_time);
-        tasks[i].id = i + 1;
+    int n;
+    printf("Enter number of tasks: ");
+    scanf("%d", &n);
+    Task t[MAX];
+    
+    for (int i = 0; i < n; i++) {
+        printf("Enter execution time and period for Task %d: ", i + 1);
+        scanf("%d %d", &t[i].exec, &t[i].period);
+        t[i].id = i + 1;
     }
-    sort_tasks_by_period();
-    if (check_feasibility()) {
-        printf("The system is feasible. Running scheduler...\n");
-        run_scheduler();
-    } else {
-        printf("The system is not feasible under Rate Monotonic Scheduling.\n");
-    }
+
+    int hp = hyper_period(t, n);
+    printf("Hyper-period: %d\n", hp);
+    rms(t, n, hp);
     return 0;
 }
