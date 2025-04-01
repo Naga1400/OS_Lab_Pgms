@@ -1,0 +1,83 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+#define MAX_TASKS 10
+
+typedef struct {
+    int id;
+    int period;
+    int execution_time;
+    int remaining_time;
+} Task;
+
+Task tasks[MAX_TASKS];
+int num_tasks;
+
+void sort_tasks_by_period() {
+    for (int i = 0; i < num_tasks - 1; i++) {
+        for (int j = i + 1; j < num_tasks; j++) {
+            if (tasks[i].period > tasks[j].period) {
+                Task temp = tasks[i];
+                tasks[i] = tasks[j];
+                tasks[j] = temp;
+            }
+        }
+    }
+}
+
+int check_feasibility() {
+    double sum_utilization = 0;
+    for (int i = 0; i < num_tasks; i++) {
+        sum_utilization += (double)tasks[i].execution_time / tasks[i].period;
+    }
+    return sum_utilization <= (double)num_tasks * (pow(2, 1.0 / num_tasks) - 1);
+}
+
+void run_scheduler() {
+    int max_period = 0;
+    for (int i = 0; i < num_tasks; i++) {
+        if (tasks[i].period > max_period) {
+            max_period = tasks[i].period;
+        }
+    }
+    for (int i = 0; i < num_tasks; i++) {
+        tasks[i].remaining_time = tasks[i].execution_time;
+    }
+    for (int time = 0; time < max_period; time++) {
+        printf("Time: %d\n", time);
+        for (int i = 0; i < num_tasks; i++) {
+            if (time % tasks[i].period == 0) {
+                tasks[i].remaining_time = tasks[i].execution_time;
+            }
+        }
+        for (int i = 0; i < num_tasks; i++) {
+            if (tasks[i].remaining_time > 0) {
+                printf("Task %d is executing.\n", tasks[i].id);
+                tasks[i].remaining_time--;
+                break;
+            }
+        }
+        for (int i = 0; i < num_tasks; i++) {
+            printf("Task %d - Remaining Time: %d\n", tasks[i].id, tasks[i].remaining_time);
+        }
+    }
+}
+
+int main() {
+    printf("Enter the number of tasks: ");
+    scanf("%d", &num_tasks);
+    for (int i = 0; i < num_tasks; i++) {
+        printf("Enter the period and execution time for task %d: ", i + 1);
+        scanf("%d %d", &tasks[i].period, &tasks[i].execution_time);
+        tasks[i].id = i + 1;
+    }
+    sort_tasks_by_period();
+    if (check_feasibility()) {
+        printf("The system is feasible. Running scheduler...\n");
+        run_scheduler();
+    } else {
+        printf("The system is not feasible under Rate Monotonic Scheduling.\n");
+    }
+    return 0;
+}
