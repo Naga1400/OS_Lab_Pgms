@@ -1,0 +1,77 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+int philosophers[5] = {0, 0, 0, 0, 0};
+
+int are_neighbors_eating(int pos) {
+    int left = (pos + 4) % 5;
+    int right = (pos + 1) % 5;
+    return philosophers[left] == 2 || philosophers[right] == 2;
+}
+
+void reset_state(int pos) {
+    philosophers[pos] = 0;
+}
+
+void grant_eating(int pos) {
+    philosophers[pos] = 2;
+    printf("P %d is granted to eat\n", pos + 1);
+    sleep(1);
+    printf("P %d has finished eating\n", pos + 1);
+    reset_state(pos);
+}
+
+int main() {
+    int total_philosophers = 5;
+    int hungry_count;
+    int hungry[5] = {0};
+    int choice;
+
+    printf("Enter the total number of philosophers: %d\n", total_philosophers);
+    printf("How many are hungry: ");
+    scanf("%d", &hungry_count);
+
+    for (int i = 0; i < hungry_count; i++) {
+        printf("Enter philosopher %d position (1 to 5): ", i + 1);
+        scanf("%d", &hungry[i]);
+        hungry[i]--;
+        philosophers[hungry[i]] = 1;
+    }
+
+    while (1) {
+        printf("\n1. One can eat at a time\n");
+        printf("2. Two can eat at a time\n");
+        printf("3. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        if (choice == 3) break;
+
+        int eating_count = 0;
+
+        for (int i = 0; i < hungry_count; i++) {
+            int pos = hungry[i];
+
+            if (philosophers[pos] == 1) {
+                printf("P %d is waiting\n", pos + 1);
+            }
+        }
+
+        for (int i = 0; i < hungry_count && eating_count < choice; i++) {
+            int pos = hungry[i];
+
+            if (philosophers[pos] == 1 && !are_neighbors_eating(pos)) {
+                grant_eating(pos);
+                eating_count++;
+            }
+        }
+
+        for (int i = 0; i < hungry_count; i++) {
+            if (philosophers[hungry[i]] == 1)
+                philosophers[hungry[i]] = 1;
+        }
+    }
+
+    return 0;
+}
