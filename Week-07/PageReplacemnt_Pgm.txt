@@ -1,0 +1,95 @@
+#include <stdio.h>
+
+int search(int frame[], int page, int f) {
+    for (int i = 0; i < f; i++)
+        if (frame[i] == page) return i;
+    return -1;
+}
+
+void fifo(int pages[], int n, int f) {
+    int frame[f], index = 0, faults = 0;
+    for (int i = 0; i < f; i++) frame[i] = -1;
+
+    printf("\nFIFO:\n");
+    for (int i = 0; i < n; i++) {
+        if (search(frame, pages[i], f) == -1) {
+            frame[index] = pages[i];
+            index = (index + 1) % f;
+            faults++;
+        }
+        for (int j = 0; j < f; j++) printf("%d ", frame[j]);
+        printf("\n");
+    }
+    printf("Faults: %d\n", faults);
+}
+
+void lru(int pages[], int n, int f) {
+    int frame[f], time[f], faults = 0, count = 0;
+    for (int i = 0; i < f; i++) frame[i] = -1;
+
+    printf("\nLRU:\n");
+    for (int i = 0; i < n; i++) {
+        int pos = search(frame, pages[i], f);
+        if (pos == -1) {
+            int lru = 0;
+            for (int j = 1; j < f; j++)
+                if (time[j] < time[lru]) lru = j;
+            frame[lru] = pages[i];
+            pos = lru;
+            faults++;
+        }
+        time[pos] = ++count;
+        for (int j = 0; j < f; j++) printf("%d ", frame[j]);
+        printf("\n");
+    }
+    printf("Faults: %d\n", faults);
+}
+
+int predict(int pages[], int frame[], int n, int i, int f) {
+    int res = -1, far = i;
+    for (int j = 0; j < f; j++) {
+        int k;
+        for (k = i; k < n; k++)
+            if (frame[j] == pages[k]) break;
+        if (k == n) return j;
+        if (k > far) { far = k; res = j; }
+    }
+    return (res == -1) ? 0 : res;
+}
+
+void optimal(int pages[], int n, int f) {
+    int frame[f], faults = 0;
+    for (int i = 0; i < f; i++) frame[i] = -1;
+
+    printf("\nOptimal:\n");
+    for (int i = 0; i < n; i++) {
+        if (search(frame, pages[i], f) == -1) {
+            int pos = -1;
+            for (int j = 0; j < f; j++)
+                if (frame[j] == -1) { pos = j; break; }
+            if (pos == -1) pos = predict(pages, frame, n, i + 1, f);
+            frame[pos] = pages[i];
+            faults++;
+        }
+        for (int j = 0; j < f; j++) printf("%d ", frame[j]);
+        printf("\n");
+    }
+    printf("Faults: %d\n", faults);
+}
+
+int main() {
+    int n, f;
+    printf("Enter number of pages: ");
+    scanf("%d", &n);
+    int pages[n];
+    printf("Enter page reference string: ");
+    for (int i = 0; i < n; i++) scanf("%d", &pages[i]);
+    printf("Enter number of frames: ");
+    scanf("%d", &f);
+
+    fifo(pages, n, f);
+    lru(pages, n, f);
+    optimal(pages, n, f);
+
+    return 0;
+}
